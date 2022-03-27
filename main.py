@@ -1,8 +1,9 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_auc_score, average_precision_score, accuracy_score, precision_score, recall_score, \
     f1_score
+import joblib
 from sklearn.model_selection import train_test_split
 
 
@@ -28,8 +29,12 @@ def fit_tfidf(train_df, test_df):
     return train_tfidf, test_tfidf, tfidf
 
 
-def fit_model(train_X, train_y):
-    clf_tfidf = LogisticRegression(solver='sag')
+# def fit_model(train_X, train_y):
+#     clf_tfidf = LogisticRegression(solver='sag')
+#     clf_tfidf.fit(train_X, train_y)
+#     return clf_tfidf
+def fit_model(train_X, train_y, random_state=42):
+    clf_tfidf = SGDClassifier(loss='modified_huber', random_state=random_state)
     clf_tfidf.fit(train_X, train_y)
     return clf_tfidf
 
@@ -62,6 +67,9 @@ if __name__ == '__main__':
     print('Fitting classifier...')
     train_y = train_df['MachineLearning']
     model = fit_model(train_tfidf, train_y)
+
+    print('Saving trained model...')
+    joblib.dump(model, 'outputs/model.joblib')
 
     train_metrics = eval_model(model, train_tfidf, train_y)
     print('Train metrics:')
