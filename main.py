@@ -7,6 +7,7 @@ import joblib
 from sklearn.model_selection import train_test_split
 import argparse
 import warnings
+import dagshub
 warnings.filterwarnings('ignore')
 
 CLASS_LABEL = 'MachineLearning'
@@ -71,27 +72,33 @@ def train():
     train_df = feature_engineering(train_df)
     test_df = feature_engineering(test_df)
 
-    print('Fitting TFIDF...')
-    train_tfidf, test_tfidf, tfidf = fit_tfidf(train_df, test_df)
+    with dagshub.dagshub_logger() as logger:
+        print('Fitting TFIDF...')
+        train_tfidf, test_tfidf, tfidf = fit_tfidf(train_df, test_df)
 
-    print('Saving TFIDF object...')
-    joblib.dump(tfidf, 'outputs/tfidf.joblib')
+        print('Saving TFIDF object...')
+        joblib.dump(tfidf, 'outputs/tfidf.joblib')
+        logger.log_hyperparams({'tfidf': tfidf.get_params()})
 
-    print('Training model...')
-    train_y = train_df[CLASS_LABEL]
-    model = fit_model(train_tfidf, train_y)
+        print('Training model...')
+        train_y = train_df[CLASS_LABEL]
+        model = fit_model(train_tfidf, train_y)
 
-    print('Saving trained model...')
-    joblib.dump(model, 'outputs/model.joblib')
+        print('Saving trained model...')
+        joblib.dump(model, 'outputs/model.joblib')
+        logger.log_hyperparams(model_class=type(model).__name__)
+        logger.log_hyperparams({'model': model.get_params()})
 
-    print('Evaluating model...')
-    train_metrics = eval_model(model, train_tfidf, train_y)
-    print('Train metrics:')
-    print(train_metrics)
+        print('Evaluating model...')
+        train_metrics = eval_model(model, train_tfidf, train_y)
+        print('Train metrics:')
+        print(train_metrics)
+        logger.log_metrics({f'train__{k}': v for k,v in train_metrics.items()})
 
-    test_metrics = eval_model(model, test_tfidf, test_df[CLASS_LABEL])
-    print('Test metrics:')
-    print(test_metrics)
+        test_metrics = eval_model(model, test_tfidf, test_df[CLASS_LABEL])
+        print('Test metrics:')
+        print(test_metrics)
+        logger.log_metrics({f'test__{k}': v for k,v in test_metrics.items()})
 
 
 if __name__ == '__main__':
