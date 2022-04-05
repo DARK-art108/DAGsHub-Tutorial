@@ -4,6 +4,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_auc_score, average_precision_score, accuracy_score, precision_score, recall_score, \
     f1_score
 import joblib
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn.model_selection import train_test_split
 import argparse
 import warnings
@@ -35,8 +36,13 @@ def fit_tfidf(train_df, test_df):
     test_tfidf = tfidf.transform(test_df['Text'])
     return train_tfidf, test_tfidf, tfidf
 
+# def fit_model(train_X, train_y, random_state=42):
+#     clf_tfidf = SGDClassifier(loss='modified_huber', random_state=random_state)
+#     clf_tfidf.fit(train_X, train_y)
+#     return clf_tfidf
+
 def fit_model(train_X, train_y, random_state=42):
-    clf_tfidf = SGDClassifier(loss='modified_huber', random_state=random_state)
+    clf_tfidf = AdaBoostClassifier(random_state=random_state)    
     clf_tfidf.fit(train_X, train_y)
     return clf_tfidf
 
